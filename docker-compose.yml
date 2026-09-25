@@ -1,0 +1,52 @@
+# =============================================
+# Docker Compose para desarrollo local
+# =============================================
+services:
+
+  # ---- Base de datos PostgreSQL ----
+  postgres:
+    image: postgres:16-alpine
+    container_name: users-management-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: crud_usuarios
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---- Aplicación Spring Boot ----
+  app:
+    build: .
+    container_name: users-management-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: crud_usuarios
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_USERNAME: tu_correo@gmail.com
+      SMTP_PASSWORD: tu_app_password
+      SMTP_FROM_ADDRESS: tu_correo@gmail.com
+      SMTP_FROM_NAME: Gestion de Usuarios
+      JWT_SECRET: ZGV2ZWxvcG1lbnQtb25seS1qd3Qtc2VjcmV0LW11c3QtYmUtcmVwbGFjZWQ=
+      JWT_EXPIRATION_SECONDS: 900
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
