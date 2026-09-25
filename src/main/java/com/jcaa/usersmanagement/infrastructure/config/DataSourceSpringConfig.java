@@ -51,5 +51,16 @@ public class DataSourceSpringConfig {
     log.info(LOG_DATASOURCE_INIT, dbHost, dbPort);
     return new HikariDataSource(hikariConfig);
   }
+
+  @Bean
+  public org.springframework.boot.CommandLineRunner initDatabase(DataSource dataSource) {
+    return args -> {
+      log.info("[DataSourceSpringConfig] Inicializando la base de datos con schema.sql...");
+      org.springframework.core.io.ClassPathResource resource = new org.springframework.core.io.ClassPathResource("schema.sql");
+      org.springframework.jdbc.datasource.init.ResourceDatabasePopulator populator = new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(resource);
+      populator.execute(dataSource);
+      log.info("[DataSourceSpringConfig] Base de datos inicializada exitosamente.");
+    };
+  }
 }
 
